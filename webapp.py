@@ -126,6 +126,64 @@ def mine():
     coin.mine_pending_transactions(address)
     coin.save_chain()
     return redirect("/wallet")
+@app.route("/dashboard")
+def dashboard():
+    total_blocks = len(coin.chain)
+    total_transactions = sum(len(block.transactions) for block in coin.chain)
+    total_supply = sum(
+        tx["amount"]
+        for block in coin.chain
+        for tx in block.transactions
+        if tx["to"] != "network"
+    )
 
+    return render_template_string("""
+<!doctype html>
+<html lang="en">
+<head>
+    <title>SELV Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-white">
+<div class="container mt-5">
+    <h1 class="mb-4">📊 Blockchain Dashboard</h1>
+<div class="row">
+    <div class="col-md-4">
+        <div class="card bg-secondary text-white mb-3 shadow">
+            <div class="card-body">
+                <h5 class="card-title">🧱 Aantal blokken</h5>
+                <p class="card-text fs-3">{{ total_blocks }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-secondary text-white mb-3 shadow">
+            <div class="card-body">
+                <h5 class="card-title">💸 Transacties</h5>
+                <p class="card-text fs-3">{{ total_transactions }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-secondary text-white mb-3 shadow">
+            <div class="card-body">
+                <h5 class="card-title">🏦 Totale muntvoorraad</h5>
+                <p class="card-text fs-3">€ {{ total_supply }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<a href="/" class="btn btn-light">🏠 Terug naar start</a>
+</div>
+</body>
+</html>
+""", 
+total_blocks=total_blocks, 
+total_transactions=total_transactions, 
+total_supply=total_supply)
 if __name__ == "__main__":
     app.run(debug=True)
